@@ -14,6 +14,9 @@ SOLIDITY_FILE_NAME = deposit_contract.json
 DEPOSIT_CONTRACT_TESTER_DIR = ${SOLIDITY_DEPOSIT_CONTRACT_DIR}/web3_tester
 CONFIGS_DIR = ./configs
 
+CURRENT_DIR = ${CURDIR}
+MYPY_STUBS_DIR = $(CURRENT_DIR)/mypy_stubs
+
 # Collect a list of generator names
 GENERATORS = $(sort $(dir $(wildcard $(GENERATOR_DIR)/*/.)))
 # Map this list of generator paths to "gen_{generator name}" entries
@@ -41,6 +44,8 @@ export DAPP_SKIP_BUILD:=1
 export DAPP_SRC:=$(SOLIDITY_DEPOSIT_CONTRACT_DIR)
 export DAPP_LIB:=$(SOLIDITY_DEPOSIT_CONTRACT_DIR)/lib
 export DAPP_JSON:=build/combined.json
+
+MYPY_CONFIG_NAME = mypy.ini
 
 .PHONY: clean partial_clean all test citest lint generate_tests pyspec install_test open_cov \
         install_deposit_contract_tester test_deposit_contract install_deposit_contract_compiler \
@@ -124,6 +129,7 @@ codespell:
 lint: pyspec
 	. venv/bin/activate; cd $(PY_SPEC_DIR); \
 	flake8  --config $(LINTER_CONFIG_FILE) ./eth2spec \
+	&& export MYPYPATH=$(MYPY_STUBS_DIR) \
 	&& mypy --config-file $(LINTER_CONFIG_FILE) -p eth2spec.phase0 -p eth2spec.altair -p eth2spec.merge
 
 lint_generators: pyspec
