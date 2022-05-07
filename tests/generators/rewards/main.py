@@ -3,11 +3,15 @@ from eth2spec.test.helpers.constants import PHASE0, ALTAIR, BELLATRIX
 
 
 if __name__ == "__main__":
-    phase_0_mods = {key: 'eth2spec.test.phase0.rewards.test_' + key for key in [
-        'basic',
-        'leak',
-        'random',
-    ]}
+    phase_0_mods = {
+        key: f'eth2spec.test.phase0.rewards.test_{key}'
+        for key in [
+            'basic',
+            'leak',
+            'random',
+        ]
+    }
+
     # No additional Altair specific rewards tests, yet.
     altair_mods = phase_0_mods
 

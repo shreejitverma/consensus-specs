@@ -36,10 +36,7 @@ def only_with_bls(alt_return=None):
     """
     def runner(fn):
         def entry(*args, **kw):
-            if bls_active:
-                return fn(*args, **kw)
-            else:
-                return alt_return
+            return fn(*args, **kw) if bls_active else alt_return
         return entry
     return runner
 
@@ -96,10 +93,6 @@ def signature_to_G2(signature):
 def AggregatePKs(pubkeys):
     if bls == py_ecc_bls:
         assert all(bls.KeyValidate(pubkey) for pubkey in pubkeys)
-    elif bls == milagro_bls:
-        # milagro_bls._AggregatePKs checks KeyValidate internally
-        pass
-
     return bls._AggregatePKs(list(pubkeys))
 
 

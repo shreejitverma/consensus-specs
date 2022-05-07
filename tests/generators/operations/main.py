@@ -3,23 +3,34 @@ from eth2spec.test.helpers.constants import PHASE0, ALTAIR, BELLATRIX
 
 
 if __name__ == "__main__":
-    phase_0_mods = {key: 'eth2spec.test.phase0.block_processing.test_process_' + key for key in [
-        'attestation',
-        'attester_slashing',
-        'block_header',
-        'deposit',
-        'proposer_slashing',
-        'voluntary_exit',
-    ]}
-    _new_altair_mods = {'sync_aggregate': [
-        'eth2spec.test.altair.block_processing.sync_aggregate.test_process_' + key
-        for key in ['sync_aggregate', 'sync_aggregate_random']
-    ]}
+    phase_0_mods = {
+        key: f'eth2spec.test.phase0.block_processing.test_process_{key}'
+        for key in [
+            'attestation',
+            'attester_slashing',
+            'block_header',
+            'deposit',
+            'proposer_slashing',
+            'voluntary_exit',
+        ]
+    }
+
+    _new_altair_mods = {
+        'sync_aggregate': [
+            f'eth2spec.test.altair.block_processing.sync_aggregate.test_process_{key}'
+            for key in ['sync_aggregate', 'sync_aggregate_random']
+        ]
+    }
+
     altair_mods = combine_mods(_new_altair_mods, phase_0_mods)
 
-    _new_bellatrix_mods = {key: 'eth2spec.test.bellatrix.block_processing.test_process_' + key for key in [
-        'execution_payload',
-    ]}
+    _new_bellatrix_mods = {
+        key: f'eth2spec.test.bellatrix.block_processing.test_process_{key}'
+        for key in [
+            'execution_payload',
+        ]
+    }
+
     bellatrix_mods = combine_mods(_new_bellatrix_mods, altair_mods)
 
     # TODO Custody Game testgen is disabled for now

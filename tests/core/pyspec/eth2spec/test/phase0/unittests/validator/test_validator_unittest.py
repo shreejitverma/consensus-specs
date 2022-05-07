@@ -204,13 +204,12 @@ def test_get_eth1_vote_consensus_vote(spec, state):
         deposit_root=b'\x05' * 32,
     )
     eth1_chain = [block_1, block_2]
-    eth1_data_votes = []
+    eth1_data_votes = [spec.get_eth1_data(block_1)]
 
-    # Only the first vote is for block_1
-    eth1_data_votes.append(spec.get_eth1_data(block_1))
     # Other votes are for block_2
-    for _ in range(votes_length - 1):
-        eth1_data_votes.append(spec.get_eth1_data(block_2))
+    eth1_data_votes.extend(
+        spec.get_eth1_data(block_2) for _ in range(votes_length - 1)
+    )
 
     state.eth1_data_votes = eth1_data_votes
     eth1_data = spec.get_eth1_vote(state, eth1_chain)
@@ -243,10 +242,7 @@ def test_get_eth1_vote_tie(spec, state):
     eth1_data_votes = []
     # Half votes are for block_1, another half votes are for block_2
     for i in range(votes_length):
-        if i % 2 == 0:
-            block = block_1
-        else:
-            block = block_2
+        block = block_1 if i % 2 == 0 else block_2
         eth1_data_votes.append(spec.get_eth1_data(block))
 
     state.eth1_data_votes = eth1_data_votes
@@ -438,7 +434,7 @@ def test_get_aggregate_signature(spec, state):
             )
         )
         attesting_pubkeys.append(state.validators[validator_index].pubkey)
-    assert len(attestations) > 0
+    assert attestations
     signature = spec.get_aggregate_signature(attestations)
     domain = spec.get_domain(state, spec.DOMAIN_BEACON_ATTESTER, attestation_data.target.epoch)
     signing_root = spec.compute_signing_root(attestation_data, domain)

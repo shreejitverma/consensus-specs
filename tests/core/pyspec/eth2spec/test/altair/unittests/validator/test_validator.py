@@ -52,11 +52,9 @@ def test_is_assigned_to_sync_committee(spec, state):
         list(state.current_sync_committee.pubkeys)
         + list(state.next_sync_committee.pubkeys)
     )
-    disqualified_pubkeys = set(
+    if disqualified_pubkeys := set(
         filter(lambda key: key not in sync_committee_pubkeys, active_pubkeys)
-    )
-    # NOTE: only check `disqualified_pubkeys` if SYNC_COMMITEE_SIZE < validator count
-    if disqualified_pubkeys:
+    ):
         sample_size = 3
         assert validator_count >= sample_size
         some_pubkeys = rng.sample(disqualified_pubkeys, sample_size)
@@ -189,14 +187,14 @@ def test_compute_subnets_for_sync_committee(state, spec):
         spec.compute_sync_committee_period(spec.get_current_epoch(state))
         == spec.compute_sync_committee_period(next_slot_epoch)
     )
-    some_sync_committee_members = list(
+    some_sync_committee_members = [
         (
             _subnet_for_sync_committee_index(spec, i),
             pubkey,
         )
-        # use current_sync_committee
         for i, pubkey in enumerate(state.current_sync_committee.pubkeys)
-    )
+    ]
+
     expected_subnets_by_pubkey = _get_expected_subnets_by_pubkey(some_sync_committee_members)
 
     for _, pubkey in some_sync_committee_members:
@@ -218,14 +216,14 @@ def test_compute_subnets_for_sync_committee_slot_period_boundary(state, spec):
         spec.compute_sync_committee_period(spec.get_current_epoch(state))
         != spec.compute_sync_committee_period(next_slot_epoch)
     )
-    some_sync_committee_members = list(
+    some_sync_committee_members = [
         (
             _subnet_for_sync_committee_index(spec, i),
             pubkey,
         )
-        # use next_sync_committee
         for i, pubkey in enumerate(state.next_sync_committee.pubkeys)
-    )
+    ]
+
     expected_subnets_by_pubkey = _get_expected_subnets_by_pubkey(some_sync_committee_members)
 
     for _, pubkey in some_sync_committee_members:

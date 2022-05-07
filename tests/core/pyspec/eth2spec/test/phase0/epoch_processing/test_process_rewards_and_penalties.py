@@ -36,32 +36,41 @@ def validate_resulting_balances(spec, pre_state, post_state, attestations):
             assert post_state.balances[index] == pre_state.balances[index]
         elif not is_post_altair(spec):
             proposer_indices = [a.proposer_index for a in post_state.previous_epoch_attestations]
-            if spec.is_in_inactivity_leak(post_state):
-                # Proposers can still make money during a leak before LIGHTCLIENT_PATCH
-                if index in proposer_indices and index in attesting_indices:
-                    assert post_state.balances[index] > pre_state.balances[index]
-                elif index in attesting_indices:
-                    # If not proposer but participated optimally, should have exactly neutral balance
-                    assert post_state.balances[index] == pre_state.balances[index]
-                else:
-                    assert post_state.balances[index] < pre_state.balances[index]
+            if (
+                spec.is_in_inactivity_leak(post_state)
+                and index in proposer_indices
+                and index in attesting_indices
+                or not spec.is_in_inactivity_leak(post_state)
+                and index in attesting_indices
+            ):
+                assert post_state.balances[index] > pre_state.balances[index]
+            elif (
+                spec.is_in_inactivity_leak(post_state)
+                and (
+                    index not in proposer_indices
+                    or index not in attesting_indices
+                )
+                and index in attesting_indices
+            ):
+                # If not proposer but participated optimally, should have exactly neutral balance
+                assert post_state.balances[index] == pre_state.balances[index]
             else:
-                if index in attesting_indices:
-                    assert post_state.balances[index] > pre_state.balances[index]
-                else:
-                    assert post_state.balances[index] < pre_state.balances[index]
+                assert post_state.balances[index] < pre_state.balances[index]
+        elif (
+            spec.is_in_inactivity_leak(post_state)
+            and index in attesting_indices
+        ):
+            # If not proposer but participated optimally, should have exactly neutral balance
+            assert post_state.balances[index] == pre_state.balances[index]
+        elif (
+            spec.is_in_inactivity_leak(post_state)
+            and index not in attesting_indices
+            or not spec.is_in_inactivity_leak(post_state)
+            and index not in attesting_indices
+        ):
+            assert post_state.balances[index] < pre_state.balances[index]
         else:
-            if spec.is_in_inactivity_leak(post_state):
-                if index in attesting_indices:
-                    # If not proposer but participated optimally, should have exactly neutral balance
-                    assert post_state.balances[index] == pre_state.balances[index]
-                else:
-                    assert post_state.balances[index] < pre_state.balances[index]
-            else:
-                if index in attesting_indices:
-                    assert post_state.balances[index] > pre_state.balances[index]
-                else:
-                    assert post_state.balances[index] < pre_state.balances[index]
+            assert post_state.balances[index] > pre_state.balances[index]
 
 
 @with_all_phases
@@ -114,10 +123,6 @@ def test_full_attestations_random_incorrect_fields(spec, state):
         if i % 3 == 1:
             # Message up some target votes
             attestation.data.target.root = b'\x23' * 32
-        if i % 3 == 2:
-            # Keep some votes 100% correct
-            pass
-
     yield from run_process_rewards_and_penalties(spec, state)
 
     attesting_indices = spec.get_unslashed_attesting_indices(state, attestations)

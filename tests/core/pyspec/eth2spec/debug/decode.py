@@ -19,9 +19,12 @@ def decode(data: Any, typ):
         temp = {}
         for field_name, field_type in typ.fields().items():
             temp[field_name] = decode(data[field_name], field_type)
-            if field_name + "_hash_tree_root" in data:
-                assert (data[field_name + "_hash_tree_root"][2:] ==
-                        hash_tree_root(temp[field_name]).hex())
+            if f"{field_name}_hash_tree_root" in data:
+                assert (
+                    data[f"{field_name}_hash_tree_root"][2:]
+                    == hash_tree_root(temp[field_name]).hex()
+                )
+
         ret = typ(**temp)
         if "hash_tree_root" in data:
             assert (data["hash_tree_root"][2:] ==

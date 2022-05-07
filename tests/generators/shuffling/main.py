@@ -9,11 +9,18 @@ from eth2spec.test.helpers.constants import PHASE0, MINIMAL, MAINNET
 
 
 def shuffling_case_fn(spec, seed, count):
-    yield 'mapping', 'data', {
-        'seed': '0x' + seed.hex(),
-        'count': count,
-        'mapping': [int(spec.compute_shuffled_index(i, count, seed)) for i in range(count)]
-    }
+    yield (
+        'mapping',
+        'data',
+        {
+            'seed': f'0x{seed.hex()}',
+            'count': count,
+            'mapping': [
+                int(spec.compute_shuffled_index(i, count, seed))
+                for i in range(count)
+            ],
+        },
+    )
 
 
 def shuffling_case(spec, seed, count):

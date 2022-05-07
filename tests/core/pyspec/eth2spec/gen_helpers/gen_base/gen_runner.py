@@ -220,7 +220,7 @@ def run_generator(generator_name, test_providers: Iterable[TestProvider]):
 
 def dump_yaml_fn(data: Any, name: str, file_mode: str, yaml_encoder: YAML):
     def dump(case_path: Path):
-        out_path = case_path / Path(name + '.yaml')
+        out_path = case_path / Path(f'{name}.yaml')
         with out_path.open(file_mode) as f:
             yaml_encoder.dump(data, f)
     return dump
@@ -228,8 +228,8 @@ def dump_yaml_fn(data: Any, name: str, file_mode: str, yaml_encoder: YAML):
 
 def dump_ssz_fn(data: AnyStr, name: str, file_mode: str):
     def dump(case_path: Path):
-        out_path = case_path / Path(name + '.ssz_snappy')
+        out_path = case_path / Path(f'{name}.ssz_snappy')
         compressed = compress(data)
-        with out_path.open(file_mode + 'b') as f:  # write in raw binary mode
+        with out_path.open(f'{file_mode}b') as f:  # write in raw binary mode
             f.write(compressed)
     return dump

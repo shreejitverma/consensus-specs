@@ -51,8 +51,7 @@ def _randomize_deposit_state(spec, state, stats):
 
 def randomize_state(spec, state, stats, exit_fraction=0.1, slash_fraction=0.1):
     randomize_state_helper(spec, state, exit_fraction=exit_fraction, slash_fraction=slash_fraction)
-    scenario_state = _randomize_deposit_state(spec, state, stats)
-    return scenario_state
+    return _randomize_deposit_state(spec, state, stats)
 
 
 def randomize_state_altair(spec, state, stats):
@@ -153,8 +152,7 @@ def random_block(spec, state, signed_blocks, scenario_state):
             block = build_random_block_from_state_for_next_slot(spec, state, deposits=deposits_for_block)
             _warn_if_empty_operations(block)
             return block
-    else:
-        raise AssertionError("could not find a block with an unslashed proposer, check ``state`` input")
+    raise AssertionError("could not find a block with an unslashed proposer, check ``state`` input")
 
 
 SYNC_AGGREGATE_PARTICIPATION_BUCKETS = 4
@@ -295,9 +293,7 @@ _this_module = sys.modules[__name__]
 
 
 def _resolve_ref(ref):
-    if isinstance(ref, str):
-        return getattr(_this_module, ref)
-    return ref
+    return getattr(_this_module, ref) if isinstance(ref, str) else ref
 
 
 def _iter_temporal(spec, description):
@@ -309,8 +305,7 @@ def _iter_temporal(spec, description):
     numeric = _resolve_ref(description)
     if isinstance(numeric, Callable):
         numeric = numeric(spec)
-    for i in range(numeric):
-        yield i
+    yield from range(numeric)
 
 
 def _compute_statistics(scenario):
@@ -335,7 +330,7 @@ def run_generated_randomized_test(spec, state, scenario):
         additional_state = mutation(spec, state, stats)
         validation(spec, state)
         if additional_state:
-            scenario_state.update(additional_state)
+            scenario_state |= additional_state
 
     yield "pre", state
 
@@ -349,8 +344,7 @@ def run_generated_randomized_test(spec, state, scenario):
             next_slot(spec, state)
 
         block_producer = _resolve_ref(transition["block_producer"])
-        block = block_producer(spec, state, blocks, scenario_state)
-        if block:
+        if block := block_producer(spec, state, blocks, scenario_state):
             signed_block = state_transition_and_sign_block(spec, state, block)
             blocks.append(signed_block)
 

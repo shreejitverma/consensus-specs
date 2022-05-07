@@ -77,10 +77,14 @@ def get_committee_index_of_shard(spec, state, slot, shard):  # Optional[Committe
     active_shard_count = spec.get_active_shard_count(state)
     committee_count = spec.get_committee_count_per_slot(state, spec.compute_epoch_at_slot(slot))
     start_shard = spec.get_start_shard(state, slot)
-    for committee_index in range(committee_count):
-        if (start_shard + committee_index) % active_shard_count == shard:
-            return committee_index
-    return None
+    return next(
+        (
+            committee_index
+            for committee_index in range(committee_count)
+            if (start_shard + committee_index) % active_shard_count == shard
+        ),
+        None,
+    )
 
 
 def get_sample_shard_block_body(spec, is_max=False):

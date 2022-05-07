@@ -3,24 +3,32 @@ from eth2spec.test.helpers.constants import PHASE0, ALTAIR, BELLATRIX
 
 
 if __name__ == "__main__":
-    phase_0_mods = {key: 'eth2spec.test.phase0.epoch_processing.test_process_' + key for key in [
-        'justification_and_finalization',
-        'rewards_and_penalties',
-        'registry_updates',
-        'slashings',
-        'eth1_data_reset',
-        'effective_balance_updates',
-        'slashings_reset',
-        'randao_mixes_reset',
-        'historical_roots_update',
-        'participation_record_updates',
-    ]}
+    phase_0_mods = {
+        key: f'eth2spec.test.phase0.epoch_processing.test_process_{key}'
+        for key in [
+            'justification_and_finalization',
+            'rewards_and_penalties',
+            'registry_updates',
+            'slashings',
+            'eth1_data_reset',
+            'effective_balance_updates',
+            'slashings_reset',
+            'randao_mixes_reset',
+            'historical_roots_update',
+            'participation_record_updates',
+        ]
+    }
 
-    _new_altair_mods = {key: 'eth2spec.test.altair.epoch_processing.test_process_' + key for key in [
-        'inactivity_updates',
-        'participation_flag_updates',
-        'sync_committee_updates',
-    ]}
+
+    _new_altair_mods = {
+        key: f'eth2spec.test.altair.epoch_processing.test_process_{key}'
+        for key in [
+            'inactivity_updates',
+            'participation_flag_updates',
+            'sync_committee_updates',
+        ]
+    }
+
     altair_mods = combine_mods(_new_altair_mods, phase_0_mods)
 
     # No epoch-processing changes in Bellatrix and previous testing repeats with new types,

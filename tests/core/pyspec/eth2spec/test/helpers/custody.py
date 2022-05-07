@@ -80,12 +80,10 @@ def get_valid_custody_slashing(spec, state, attestation, shard_transition, custo
     slashing_domain = spec.get_domain(state, spec.DOMAIN_CUSTODY_BIT_SLASHING)
     slashing_root = spec.compute_signing_root(slashing, slashing_domain)
 
-    signed_slashing = spec.SignedCustodySlashing(
+    return spec.SignedCustodySlashing(
         message=slashing,
-        signature=bls.Sign(privkeys[whistleblower_index], slashing_root)
+        signature=bls.Sign(privkeys[whistleblower_index], slashing_root),
     )
-
-    return signed_slashing
 
 
 def get_valid_chunk_challenge(spec, state, attestation, shard_transition, data_index=None, chunk_index=None):
@@ -95,11 +93,11 @@ def get_valid_chunk_challenge(spec, state, attestation, shard_transition, data_i
         attestation.data.index
     )
     responder_index = crosslink_committee[0]
-    data_index = len(shard_transition.shard_block_lengths) - 1 if not data_index else data_index
+    data_index = data_index or len(shard_transition.shard_block_lengths) - 1
 
     chunk_count = (shard_transition.shard_block_lengths[data_index]
                    + spec.BYTES_PER_CUSTODY_CHUNK - 1) // spec.BYTES_PER_CUSTODY_CHUNK
-    chunk_index = chunk_count - 1 if not chunk_index else chunk_index
+    chunk_index = chunk_index or chunk_count - 1
 
     return spec.CustodyChunkChallenge(
         responder_index=responder_index,
@@ -149,14 +147,13 @@ def get_custody_test_vector(bytelength, offset=0):
 def get_sample_shard_transition(spec, start_slot, block_lengths):
     b = [spec.hash_tree_root(ByteList[spec.MAX_SHARD_BLOCK_SIZE](get_custody_test_vector(x)))
          for x in block_lengths]
-    shard_transition = spec.ShardTransition(
+    return spec.ShardTransition(
         start_slot=start_slot,
         shard_block_lengths=block_lengths,
         shard_data_roots=b,
         shard_states=[spec.ShardState() for x in block_lengths],
         proposer_signature_aggregate=spec.BLSSignature(),
     )
-    return shard_transition
 
 
 def get_custody_slashable_test_vector(spec, custody_secret, length, slashable=True):

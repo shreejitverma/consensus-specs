@@ -39,8 +39,7 @@ def a0(tester):
 
 @pytest.fixture
 def w3(tester):
-    web3 = Web3(EthereumTesterProvider(tester))
-    return web3
+    return Web3(EthereumTesterProvider(tester))
 
 
 @pytest.fixture
@@ -52,11 +51,9 @@ def registration_contract(w3, tester):
         bytecode=contract_bytecode)
     tx_hash = registration.constructor().transact()
     tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    registration_deployed = w3.eth.contract(
-        address=tx_receipt.contractAddress,
-        abi=contract_abi
+    return w3.eth.contract(
+        address=tx_receipt.contractAddress, abi=contract_abi
     )
-    return registration_deployed
 
 
 @pytest.fixture

@@ -117,20 +117,19 @@ def _get_self_type_from_source(source: str) -> Optional[str]:
 def _get_class_info_from_source(source: str) -> (str, Optional[str]):
     class_def = ast.parse(source).body[0]
     base = class_def.bases[0]
-    if isinstance(base, ast.Name):
-        parent_class = base.id
-    else:
-        # NOTE: SSZ definition derives from earlier phase...
-        # e.g. `phase0.SignedBeaconBlock`
-        # TODO: check for consistency with other phases
-        parent_class = None
+    parent_class = base.id if isinstance(base, ast.Name) else None
     return class_def.name, parent_class
 
 
 def _is_constant_id(name: str) -> bool:
-    if name[0] not in string.ascii_uppercase + '_':
+    if name[0] not in f'{string.ascii_uppercase}_':
         return False
-    return all(map(lambda c: c in string.ascii_uppercase + '_' + string.digits, name[1:]))
+    return all(
+        map(
+            lambda c: c in f'{string.ascii_uppercase}_{string.digits}',
+            name[1:],
+        )
+    )
 
 
 ETH2_SPEC_COMMENT_PREFIX = "eth2spec:"
@@ -138,19 +137,16 @@ ETH2_SPEC_COMMENT_PREFIX = "eth2spec:"
 
 def _get_eth2_spec_comment(child: LinkRefDef) -> Optional[str]:
     _, _, title = child._parse_info
-    if not (title[0] == "(" and title[len(title)-1] == ")"):
+    if title[0] != "(" or title[len(title) - 1] != ")":
         return None
-    title = title[1:len(title)-1]
+    title = title[1:-1]
     if not title.startswith(ETH2_SPEC_COMMENT_PREFIX):
         return None
     return title[len(ETH2_SPEC_COMMENT_PREFIX):].strip()
 
 
 def _parse_value(name: str, typed_value: str) -> VariableDefinition:
-    comment = None
-    if name == "BLS12_381_Q":
-        comment = "noqa: E501"
-
+    comment = "noqa: E501" if name == "BLS12_381_Q" else None
     typed_value = typed_value.strip()
     if '(' not in typed_value:
         return VariableDefinition(type_name=None, value=typed_value, comment=comment)
@@ -209,7 +205,7 @@ def get_spec(file_name: Path, preset: Dict[str, str], config: Dict[str, str]) ->
                 # NOTE: trim whitespace from spec
                 ssz_objects[current_name] = "\n".join(line.rstrip() for line in source.splitlines())
             else:
-                raise Exception("unrecognized python code element: " + source)
+                raise Exception(f"unrecognized python code element: {source}")
         elif isinstance(child, Table):
             for row in child.children:
                 cells = row.children
@@ -494,11 +490,7 @@ class BellatrixSpecBuilder(AltairSpecBuilder):
 
     @classmethod
     def imports(cls, preset_name: str):
-        return super().imports(preset_name) + f'''
-from typing import Protocol
-from eth2spec.altair import {preset_name} as altair
-from eth2spec.utils.ssz.ssz_typing import Bytes8, Bytes20, ByteList, ByteVector, uint256
-'''
+        return f'''{super().imports(preset_name)}\x1ffrom typing import Protocol\x1ffrom eth2spec.altair import {preset_name} as altair\x1ffrom eth2spec.utils.ssz.ssz_typing import Bytes8, Bytes20, ByteList, ByteVector, uint256\x1f'''
 
     @classmethod
     def preparations(cls):
@@ -586,7 +578,7 @@ def objects_to_spec(preset_name: str,
     def format_protocol(protocol_name: str, protocol_def: ProtocolDefinition) -> str:
         protocol = f"class {protocol_name}(Protocol):"
         for fn_source in protocol_def.functions.values():
-            fn_source = fn_source.replace("self: "+protocol_name, "self")
+            fn_source = fn_source.replace(f"self: {protocol_name}", "self")
             protocol += "\n\n" + textwrap.indent(fn_source, "    ")
         return protocol
 
@@ -674,7 +666,7 @@ T = TypeVar('T')
 
 
 def combine_dicts(old_dict: Dict[str, T], new_dict: Dict[str, T]) -> Dict[str, T]:
-    return {**old_dict, **new_dict}
+    return old_dict | new_dict
 
 
 ignored_dependencies = [
@@ -750,15 +742,12 @@ def parse_config_vars(conf: Dict[str, str]) -> Dict[str, str]:
     """
     Parses a dict of basic str/int/list types into a dict for insertion into the spec code.
     """
-    out: Dict[str, str] = dict()
-    for k, v in conf.items():
-        if isinstance(v, str) and (v.startswith("0x") or k == 'PRESET_BASE'):
-            # Represent byte data with string, to avoid misinterpretation as big-endian int.
-            # Everything is either byte data or an integer, with PRESET_BASE as one exception.
-            out[k] = f"'{v}'"
-        else:
-            out[k] = str(int(v))
-    return out
+    return {
+        k: f"'{v}'"
+        if isinstance(v, str) and (v.startswith("0x") or k == 'PRESET_BASE')
+        else str(int(v))
+        for k, v in conf.items()
+    }
 
 
 def load_preset(preset_files: Sequence[Path]) -> Dict[str, str]:
@@ -774,7 +763,7 @@ def load_preset(preset_files: Sequence[Path]) -> Dict[str, str]:
         if not set(fork_preset.keys()).isdisjoint(preset.keys()):
             duplicates = set(fork_preset.keys()).intersection(set(preset.keys()))
             raise Exception(f"duplicate config var(s) in preset files: {', '.join(duplicates)}")
-        preset.update(fork_preset)
+        preset |= fork_preset
     assert preset != {}
     return parse_config_vars(preset)
 
@@ -869,8 +858,8 @@ class PySpecCommand(Command):
                     specs/bellatrix/fork-choice.md
                     specs/bellatrix/validator.md
                 """
-            if len(self.md_doc_paths) == 0:
-                raise Exception('no markdown files specified, and spec fork "%s" is unknown', self.spec_fork)
+        if len(self.md_doc_paths) == 0:
+            raise Exception('no markdown files specified, and spec fork "%s" is unknown', self.spec_fork)
 
         self.parsed_md_doc_paths = self.md_doc_paths.split()
 
@@ -908,7 +897,7 @@ class PySpecCommand(Command):
                               f' out dir: "{self.out_dir}", spec fork: "{self.spec_fork}", build target: "{name}"')
                 self.debug_print(spec_str)
             else:
-                with open(os.path.join(self.out_dir, name+'.py'), 'w') as out:
+                with open(os.path.join(self.out_dir, f'{name}.py'), 'w') as out:
                     out.write(spec_str)
 
         if not self.dry_run:

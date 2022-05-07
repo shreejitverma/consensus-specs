@@ -11,10 +11,7 @@ def bitvector_case_fn(rng: Random, mode: RandomizationMode, size: int, invalid_m
                                  max_list_length=size,
                                  mode=mode, chaos=False)
     if invalid_making_pos is not None and invalid_making_pos <= size:
-        already_invalid = False
-        for i in range(invalid_making_pos, size):
-            if bits[i]:
-                already_invalid = True
+        already_invalid = any(bits[i] for i in range(invalid_making_pos, size))
         if not already_invalid:
             bits[invalid_making_pos] = True
     return bits

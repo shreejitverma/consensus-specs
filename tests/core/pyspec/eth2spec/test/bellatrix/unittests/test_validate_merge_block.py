@@ -24,10 +24,7 @@ def run_validate_merge_block(spec, pow_chain, beacon_block, valid=True):
     """
 
     def get_pow_block(hash: spec.Bytes32) -> Optional[spec.PowBlock]:
-        for block in pow_chain:
-            if block.block_hash == hash:
-                return block
-        return None
+        return next((block for block in pow_chain if block.block_hash == hash), None)
 
     get_pow_block_backup = spec.get_pow_block
 

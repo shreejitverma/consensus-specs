@@ -14,22 +14,22 @@ def encode(value, include_hash_tree_roots=False):
     elif isinstance(value, boolean):
         return value == 1
     elif isinstance(value, (Bitlist, Bitvector)):
-        return '0x' + serialize(value).hex()
+        return f'0x{serialize(value).hex()}'
     elif isinstance(value, list):  # normal python lists
         return [encode(element, include_hash_tree_roots) for element in value]
     elif isinstance(value, (List, Vector)):
         return [encode(element, include_hash_tree_roots) for element in value]
     elif isinstance(value, bytes):  # bytes, ByteList, ByteVector
-        return '0x' + value.hex()
+        return f'0x{value.hex()}'
     elif isinstance(value, Container):
         ret = {}
         for field_name in value.fields().keys():
             field_value = getattr(value, field_name)
             ret[field_name] = encode(field_value, include_hash_tree_roots)
             if include_hash_tree_roots:
-                ret[field_name + "_hash_tree_root"] = '0x' + hash_tree_root(field_value).hex()
+                ret[f"{field_name}_hash_tree_root"] = f'0x{hash_tree_root(field_value).hex()}'
         if include_hash_tree_roots:
-            ret["hash_tree_root"] = '0x' + hash_tree_root(value).hex()
+            ret["hash_tree_root"] = f'0x{hash_tree_root(value).hex()}'
         return ret
     elif isinstance(value, Union):
         inner_value = value.value()
