@@ -42,10 +42,6 @@ def run_attestation_processing(spec, state, attestation, valid=True):
             assert len(state.current_epoch_attestations) == current_epoch_count + 1
         else:
             assert len(state.previous_epoch_attestations) == previous_epoch_count + 1
-    else:
-        # After accounting reform, there are cases when processing an attestation does not result in any flag updates
-        pass
-
     # yield post-state
     yield 'post', state
 
@@ -73,16 +69,16 @@ def build_attestation_data(spec, state, slot, index, shard=None):
         source_epoch = state.current_justified_checkpoint.epoch
         source_root = state.current_justified_checkpoint.root
 
-    data = spec.AttestationData(
+    # if spec.fork == SHARDING  # TODO: add extra data for shard voting
+    return spec.AttestationData(
         slot=slot,
         index=index,
         beacon_block_root=block_root,
         source=spec.Checkpoint(epoch=source_epoch, root=source_root),
-        target=spec.Checkpoint(epoch=spec.compute_epoch_at_slot(slot), root=epoch_boundary_root),
+        target=spec.Checkpoint(
+            epoch=spec.compute_epoch_at_slot(slot), root=epoch_boundary_root
+        ),
     )
-
-    # if spec.fork == SHARDING  # TODO: add extra data for shard voting
-    return data
 
 
 def get_valid_attestation(spec,
@@ -273,8 +269,7 @@ def state_transition_with_full_block(spec, state, fill_cur_epoch, fill_prev_epoc
         for attestation in attestations:
             block.body.attestations.append(attestation)
 
-    signed_block = state_transition_and_sign_block(spec, state, block)
-    return signed_block
+    return state_transition_and_sign_block(spec, state, block)
 
 
 def state_transition_with_full_attestations_block(spec, state, fill_cur_epoch, fill_prev_epoch):
@@ -308,8 +303,7 @@ def state_transition_with_full_attestations_block(spec, state, fill_cur_epoch, f
             )
 
     block.body.attestations = attestations
-    signed_block = state_transition_and_sign_block(spec, state, block)
-    return signed_block
+    return state_transition_and_sign_block(spec, state, block)
 
 
 def prepare_state_with_attestations(spec, state, participation_fn=None):

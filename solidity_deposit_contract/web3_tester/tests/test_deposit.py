@@ -160,7 +160,7 @@ def test_deposit_tree(registration_contract, w3, assert_tx_failed):
 
     deposit_amount_list = [randint(MIN_DEPOSIT_AMOUNT, FULL_DEPOSIT_AMOUNT * 2) for _ in range(10)]
     deposit_data_list = []
-    for i in range(0, 10):
+    for i in range(10):
         deposit_data = DepositData(
             pubkey=SAMPLE_PUBKEY,
             withdrawal_credentials=SAMPLE_WITHDRAWAL_CREDENTIALS,

@@ -3,19 +3,27 @@ from eth2spec.test.helpers.constants import PHASE0, ALTAIR, BELLATRIX
 
 
 if __name__ == "__main__":
-    phase_0_mods = {key: 'eth2spec.test.phase0.fork_choice.test_' + key for key in [
-        'get_head',
-        'on_block',
-        'ex_ante',
-    ]}
+    phase_0_mods = {
+        key: f'eth2spec.test.phase0.fork_choice.test_{key}'
+        for key in [
+            'get_head',
+            'on_block',
+            'ex_ante',
+        ]
+    }
+
     # No additional Altair specific finality tests, yet.
     altair_mods = phase_0_mods
 
     # For merge `on_merge_block` test kind added with `pow_block_N.ssz` files with several
     # PowBlock's which should be resolved by `get_pow_block(hash: Hash32) -> PowBlock` function
-    _new_bellatrix_mods = {key: 'eth2spec.test.bellatrix.fork_choice.test_' + key for key in [
-        'on_merge_block',
-    ]}
+    _new_bellatrix_mods = {
+        key: f'eth2spec.test.bellatrix.fork_choice.test_{key}'
+        for key in [
+            'on_merge_block',
+        ]
+    }
+
     bellatrix_mods = combine_mods(_new_bellatrix_mods, altair_mods)
 
     all_mods = {

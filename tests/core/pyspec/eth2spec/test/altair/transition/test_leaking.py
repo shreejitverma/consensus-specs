@@ -25,11 +25,8 @@ def test_transition_with_leaking_pre_fork(state, fork_epoch, spec, post_spec, pr
 
     yield "pre", state
 
-    # irregular state transition to handle fork:
-    blocks = []
     state, block = do_fork(state, spec, post_spec, fork_epoch)
-    blocks.append(post_tag(block))
-
+    blocks = [post_tag(block)]
     # check post transition state
     assert spec.is_in_inactivity_leak(state)
 
@@ -53,11 +50,8 @@ def test_transition_with_leaking_at_fork(state, fork_epoch, spec, post_spec, pre
 
     yield "pre", state
 
-    # irregular state transition to handle fork:
-    blocks = []
     state, block = do_fork(state, spec, post_spec, fork_epoch)
-    blocks.append(post_tag(block))
-
+    blocks = [post_tag(block)]
     # check post transition state
     assert spec.is_in_inactivity_leak(state)
 

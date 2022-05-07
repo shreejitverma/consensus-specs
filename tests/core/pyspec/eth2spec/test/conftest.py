@@ -65,8 +65,7 @@ def preset(request):
 
 @fixture(autouse=True)
 def run_phases(request):
-    forks = request.config.getoption("--fork", default=None)
-    if forks:
+    if forks := request.config.getoption("--fork", default=None):
         forks = [fork.lower() for fork in forks]
         _validate_fork_name(forks)
         context.DEFAULT_PYTEST_FORKS = set(forks)
