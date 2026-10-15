@@ -5,8 +5,10 @@ from math import log2
 ZERO_BYTES32 = b'\x00' * 32
 
 zerohashes = [ZERO_BYTES32]
-for layer in range(1, 100):
-    zerohashes.append(hash(zerohashes[layer - 1] + zerohashes[layer - 1]))
+zerohashes.extend(
+    hash(zerohashes[layer - 1] + zerohashes[layer - 1])
+    for layer in range(1, 100)
+)
 
 
 def calc_merkle_tree_from_leaves(values, layer_count=32):

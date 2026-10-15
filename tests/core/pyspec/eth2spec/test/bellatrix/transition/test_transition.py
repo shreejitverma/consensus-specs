@@ -23,11 +23,8 @@ def test_sample_transition(state, fork_epoch, spec, post_spec, pre_tag, post_tag
 
     yield "pre", state
 
-    # irregular state transition to handle fork:
-    blocks = []
     state, block = do_fork(state, spec, post_spec, fork_epoch)
-    blocks.append(post_tag(block))
-
+    blocks = [post_tag(block)]
     # continue regular state transition with new spec into next epoch
     transition_to_next_epoch_and_append_blocks(post_spec, state, post_tag, blocks, only_last_block=True)
 

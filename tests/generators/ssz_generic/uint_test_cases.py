@@ -34,7 +34,7 @@ def generate_random_uint_test_cases():
             serial = ssz.encode(value, sedes)
             # note that we need to create the tags in each loop cycle, otherwise ruamel will use
             # YAML references which makes the resulting file harder to read
-            tags = tuple(["atomic", "uint", "random"])
+            tags = "atomic", "uint", "random"
             yield render_test_case(
                 sedes=sedes,
                 valid=True,
@@ -57,7 +57,7 @@ def generate_uint_wrong_length_test_cases():
         })
         for length in lengths:
             for _ in range(RANDOM_TEST_CASES_PER_LENGTH):
-                tags = tuple(["atomic", "uint", "wrong_length"])
+                tags = "atomic", "uint", "wrong_length"
                 yield render_test_case(
                     sedes=sedes,
                     valid=False,

@@ -32,7 +32,6 @@ rng = random.Random(1001)
 @with_all_phases
 @spec_state_test
 def test_genesis(spec, state):
-    test_steps = []
     # Initialization
     store, anchor_block = get_genesis_forkchoice_store_and_block(spec, state)
     yield 'anchor_state', state
@@ -40,12 +39,14 @@ def test_genesis(spec, state):
 
     anchor_root = get_anchor_root(spec, state)
     assert spec.get_head(store) == anchor_root
-    test_steps.append({
-        'checks': {
-            'genesis_time': int(store.genesis_time),
-            'head': get_formatted_head_output(spec, store),
+    test_steps = [
+        {
+            'checks': {
+                'genesis_time': int(store.genesis_time),
+                'head': get_formatted_head_output(spec, store),
+            }
         }
-    })
+    ]
 
     yield 'steps', test_steps
 
@@ -56,7 +57,6 @@ def test_genesis(spec, state):
 @with_all_phases
 @spec_state_test
 def test_chain_no_attestations(spec, state):
-    test_steps = []
     # Initialization
     store, anchor_block = get_genesis_forkchoice_store_and_block(spec, state)
     yield 'anchor_state', state
@@ -64,11 +64,13 @@ def test_chain_no_attestations(spec, state):
 
     anchor_root = get_anchor_root(spec, state)
     assert spec.get_head(store) == anchor_root
-    test_steps.append({
-        'checks': {
-            'head': get_formatted_head_output(spec, store),
+    test_steps = [
+        {
+            'checks': {
+                'head': get_formatted_head_output(spec, store),
+            }
         }
-    })
+    ]
 
     # On receiving a block of `GENESIS_SLOT + 1` slot
     block_1 = build_empty_block_for_next_slot(spec, state)
@@ -93,7 +95,6 @@ def test_chain_no_attestations(spec, state):
 @with_all_phases
 @spec_state_test
 def test_split_tie_breaker_no_attestations(spec, state):
-    test_steps = []
     genesis_state = state.copy()
 
     # Initialization
@@ -102,11 +103,13 @@ def test_split_tie_breaker_no_attestations(spec, state):
     yield 'anchor_block', anchor_block
     anchor_root = get_anchor_root(spec, state)
     assert spec.get_head(store) == anchor_root
-    test_steps.append({
-        'checks': {
-            'head': get_formatted_head_output(spec, store),
+    test_steps = [
+        {
+            'checks': {
+                'head': get_formatted_head_output(spec, store),
+            }
         }
-    })
+    ]
 
     # Create block at slot 1
     block_1_state = genesis_state.copy()
@@ -140,7 +143,6 @@ def test_split_tie_breaker_no_attestations(spec, state):
 @with_all_phases
 @spec_state_test
 def test_shorter_chain_but_heavier_weight(spec, state):
-    test_steps = []
     genesis_state = state.copy()
 
     # Initialization
@@ -149,11 +151,13 @@ def test_shorter_chain_but_heavier_weight(spec, state):
     yield 'anchor_block', anchor_block
     anchor_root = get_anchor_root(spec, state)
     assert spec.get_head(store) == anchor_root
-    test_steps.append({
-        'checks': {
-            'head': get_formatted_head_output(spec, store),
+    test_steps = [
+        {
+            'checks': {
+                'head': get_formatted_head_output(spec, store),
+            }
         }
-    })
+    ]
 
     # build longer tree
     long_state = genesis_state.copy()
@@ -189,18 +193,19 @@ def test_shorter_chain_but_heavier_weight(spec, state):
 @spec_state_test
 @with_presets([MINIMAL], reason="too slow")
 def test_filtered_block_tree(spec, state):
-    test_steps = []
     # Initialization
     store, anchor_block = get_genesis_forkchoice_store_and_block(spec, state)
     yield 'anchor_state', state
     yield 'anchor_block', anchor_block
     anchor_root = get_anchor_root(spec, state)
     assert spec.get_head(store) == anchor_root
-    test_steps.append({
-        'checks': {
-            'head': get_formatted_head_output(spec, store),
+    test_steps = [
+        {
+            'checks': {
+                'head': get_formatted_head_output(spec, store),
+            }
         }
-    })
+    ]
 
     # transition state past initial couple of epochs
     next_epoch(spec, state)
@@ -279,7 +284,6 @@ def test_filtered_block_tree(spec, state):
 @with_all_phases
 @spec_state_test
 def test_proposer_boost_correct_head(spec, state):
-    test_steps = []
     genesis_state = state.copy()
 
     # Initialization
@@ -288,11 +292,13 @@ def test_proposer_boost_correct_head(spec, state):
     yield 'anchor_block', anchor_block
     anchor_root = get_anchor_root(spec, state)
     assert spec.get_head(store) == anchor_root
-    test_steps.append({
-        'checks': {
-            'head': get_formatted_head_output(spec, store),
+    test_steps = [
+        {
+            'checks': {
+                'head': get_formatted_head_output(spec, store),
+            }
         }
-    })
+    ]
 
     # Build block that serves as head ONLY on timely arrival, and ONLY in that slot
     state_1 = genesis_state.copy()

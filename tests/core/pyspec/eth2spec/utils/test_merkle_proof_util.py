@@ -16,10 +16,7 @@ def get_power_of_two_ceil(x: int) -> int:
 def get_power_of_two_floor(x: int) -> int:
     if x <= 1:
         return 1
-    if x == 2:
-        return x
-    else:
-        return 2 * get_power_of_two_floor(x // 2)
+    return x if x == 2 else 2 * get_power_of_two_floor(x // 2)
 
 
 power_of_two_ceil_cases = [

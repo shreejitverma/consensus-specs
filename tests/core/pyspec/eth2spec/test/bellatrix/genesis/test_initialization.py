@@ -16,10 +16,13 @@ from eth2spec.test.helpers.genesis import (
 
 
 def eth1_init_data(eth1_block_hash, eth1_timestamp):
-    yield 'eth1', {
-        'eth1_block_hash': '0x' + eth1_block_hash.hex(),
-        'eth1_timestamp': int(eth1_timestamp),
-    }
+    yield (
+        'eth1',
+        {
+            'eth1_block_hash': f'0x{eth1_block_hash.hex()}',
+            'eth1_timestamp': int(eth1_timestamp),
+        },
+    )
 
 
 @with_phases([BELLATRIX])

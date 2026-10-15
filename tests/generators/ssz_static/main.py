@@ -23,9 +23,7 @@ def create_test_case(rng: Random, typ,
     value = random_value.get_random_ssz_object(rng, typ, MAX_BYTES_LENGTH, MAX_LIST_LENGTH, mode, chaos)
     yield "value", "data", encode.encode(value)
     yield "serialized", "ssz", serialize(value)
-    roots_data = {
-        "root": '0x' + hash_tree_root(value).hex()
-    }
+    roots_data = {"root": f'0x{hash_tree_root(value).hex()}'}
     yield "roots", "data", roots_data
 
 

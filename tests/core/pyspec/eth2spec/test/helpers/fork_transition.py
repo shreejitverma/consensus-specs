@@ -98,11 +98,9 @@ def only_at(slot):
 def state_transition_across_slots(spec, state, to_slot, block_filter=_all_blocks):
     assert state.slot < to_slot
     while state.slot < to_slot:
-        should_make_block = block_filter(state)
-        if should_make_block:
+        if should_make_block := block_filter(state):
             block = build_empty_block_for_next_slot(spec, state)
-            signed_block = state_transition_and_sign_block(spec, state, block)
-            yield signed_block
+            yield state_transition_and_sign_block(spec, state, block)
         else:
             next_slot(spec, state)
 
@@ -129,8 +127,7 @@ def state_transition_across_slots_with_ignoring_proposers(spec,
         proposer_index = spec.get_beacon_proposer_index(future_state)
         if proposer_index not in ignoring_proposers:
             block = build_empty_block_for_next_slot(spec, state)
-            signed_block = state_transition_and_sign_block(spec, state, block)
-            yield signed_block
+            yield state_transition_and_sign_block(spec, state, block)
             if state.slot >= to_slot:
                 found_valid = True
         else:
@@ -181,11 +178,7 @@ def transition_to_next_epoch_and_append_blocks(spec,
                                                ignoring_proposers=None):
     to_slot = spec.SLOTS_PER_EPOCH + state.slot
 
-    if only_last_block:
-        block_filter = only_at(to_slot)
-    else:
-        block_filter = _all_blocks
-
+    block_filter = only_at(to_slot) if only_last_block else _all_blocks
     if ignoring_proposers is None:
         result_blocks = state_transition_across_slots(spec, state, to_slot, block_filter=block_filter)
     else:
@@ -265,7 +258,7 @@ def run_transition_with_operation(state,
                 attester_slashing.attestation_2.attesting_indices
             )
             assert selected_validator_index in indices
-            assert len(indices) > 0
+            assert indices
             for validator_index in indices:
                 assert state.validators[validator_index].slashed
         elif operation_type == OperationType.DEPOSIT:

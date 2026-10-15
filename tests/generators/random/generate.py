@@ -72,8 +72,7 @@ def _flatten(t):
     for transition_batch in t[1]:
         for transition in transition_batch:
             if isinstance(transition, tuple):
-                for subtransition in transition:
-                    result.append(subtransition)
+                result.extend(iter(transition))
             else:
                 result.append(transition)
     return result
@@ -144,9 +143,7 @@ def _id_from_scenario(test_description):
     Construct a name for the scenario based its data.
     """
     def _to_id_part(prefix, x):
-        suffix = str(x)
-        if isinstance(x, Callable):
-            suffix = x.__name__
+        suffix = x.__name__ if isinstance(x, Callable) else str(x)
         return f"{prefix}{suffix}"
 
     def _id_from_transition(transition):
@@ -206,9 +203,7 @@ def test_randomized_{index}(spec, state):
 def _to_comment(name, indent_level):
     parts = name.split("|")
     indentation = "    " * indent_level
-    parts = [
-        indentation + "# " + part for part in parts
-    ]
+    parts = [f"{indentation}# {part}" for part in parts]
     return "\n".join(parts)
 
 

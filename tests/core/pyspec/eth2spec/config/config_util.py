@@ -7,7 +7,7 @@ def parse_config_vars(conf: Dict[str, Any]) -> Dict[str, Any]:
     """
     Parses a dict of basic str/int/list types into more detailed python types
     """
-    out: Dict[str, Any] = dict()
+    out: Dict[str, Any] = {}
     for k, v in conf.items():
         if isinstance(v, list):
             # Clean up integer values. YAML parser renders lists of ints as list of str
@@ -34,7 +34,7 @@ def load_preset(preset_files: Iterable[Union[Path, BinaryIO, TextIO]]) -> Dict[s
         if not set(fork_preset.keys()).isdisjoint(preset.keys()):
             duplicates = set(fork_preset.keys()).intersection(set(preset.keys()))
             raise Exception(f"duplicate config var(s) in preset files: {', '.join(duplicates)}")
-        preset.update(fork_preset)
+        preset |= fork_preset
     assert preset != {}
     return parse_config_vars(preset)
 

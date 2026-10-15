@@ -61,11 +61,8 @@ def test_transition_with_one_fourth_exiting_validators_exit_post_fork(state,
 
     yield "pre", state
 
-    # irregular state transition to handle fork:
-    blocks = []
     state, block = do_fork(state, spec, post_spec, fork_epoch)
-    blocks.append(post_tag(block))
-
+    blocks = [post_tag(block)]
     # ensure that some of the current sync committee members are exiting
     exited_pubkeys = [state.validators[index].pubkey for index in exited_indices]
     assert any(set(exited_pubkeys).intersection(list(state.current_sync_committee.pubkeys)))
@@ -119,11 +116,8 @@ def test_transition_with_one_fourth_exiting_validators_exit_at_fork(state,
 
     yield "pre", state
 
-    # irregular state transition to handle fork:
-    blocks = []
     state, block = do_fork(state, spec, post_spec, fork_epoch)
-    blocks.append(post_tag(block))
-
+    blocks = [post_tag(block)]
     # check post transition state
     for index in exited_indices:
         validator = state.validators[index]
@@ -167,11 +161,8 @@ def test_transition_with_non_empty_activation_queue(state, fork_epoch, spec, pos
 
     yield "pre", state
 
-    # irregular state transition to handle fork:
-    blocks = []
     state, block = do_fork(state, spec, post_spec, fork_epoch)
-    blocks.append(post_tag(block))
-
+    blocks = [post_tag(block)]
     # continue regular state transition with new spec into next epoch
     transition_to_next_epoch_and_append_blocks(post_spec, state, post_tag, blocks, only_last_block=True)
 
@@ -197,11 +188,8 @@ def test_transition_with_activation_at_fork_epoch(state, fork_epoch, spec, post_
 
     yield "pre", state
 
-    # irregular state transition to handle fork:
-    blocks = []
     state, block = do_fork(state, spec, post_spec, fork_epoch)
-    blocks.append(post_tag(block))
-
+    blocks = [post_tag(block)]
     # continue regular state transition with new spec into next epoch
     transition_to_next_epoch_and_append_blocks(post_spec, state, post_tag, blocks, only_last_block=True)
 

@@ -119,7 +119,7 @@ def deltas_name_to_flag_index(spec, deltas_name):
         return spec.TIMELY_HEAD_FLAG_INDEX
     elif 'target' in deltas_name:
         return spec.TIMELY_TARGET_FLAG_INDEX
-    raise ValueError("Wrong deltas_name %s" % deltas_name)
+    raise ValueError(f"Wrong deltas_name {deltas_name}")
 
 
 def run_attestation_component_deltas(spec, state, component_delta_fn, matching_att_fn, deltas_name):
@@ -149,26 +149,28 @@ def run_attestation_component_deltas(spec, state, component_delta_fn, matching_a
         validator = state.validators[index]
         enough_for_reward = has_enough_for_reward(spec, state, index)
         if index in matching_indices and not validator.slashed:
-            if is_post_altair(spec):
-                if not spec.is_in_inactivity_leak(state) and enough_for_reward:
-                    assert rewards[index] > 0
-                else:
-                    assert rewards[index] == 0
+            if (
+                is_post_altair(spec)
+                and not spec.is_in_inactivity_leak(state)
+                and enough_for_reward
+                or not is_post_altair(spec)
+                and enough_for_reward
+            ):
+                assert rewards[index] > 0
             else:
-                if enough_for_reward:
-                    assert rewards[index] > 0
-                else:
-                    assert rewards[index] == 0
-
+                assert rewards[index] == 0
             assert penalties[index] == 0
         else:
             assert rewards[index] == 0
-            if is_post_altair(spec) and 'head' in deltas_name:
+            if (
+                is_post_altair(spec)
+                and 'head' in deltas_name
+                or (not is_post_altair(spec) or 'head' not in deltas_name)
+                and not enough_for_reward
+            ):
                 assert penalties[index] == 0
-            elif enough_for_reward:
-                assert penalties[index] > 0
             else:
-                assert penalties[index] == 0
+                assert penalties[index] > 0
 
 
 def run_get_inclusion_delay_deltas(spec, state):
@@ -199,10 +201,18 @@ def run_get_inclusion_delay_deltas(spec, state):
             rewarded_indices.add(index)
 
             # Track proposer of earliest included attestation for the validator defined by index
-            earliest_attestation = min([
-                a for a in eligible_attestations
-                if index in spec.get_attesting_indices(state, a.data, a.aggregation_bits)
-            ], key=lambda a: a.inclusion_delay)
+            earliest_attestation = min(
+                (
+                    a
+                    for a in eligible_attestations
+                    if index
+                    in spec.get_attesting_indices(
+                        state, a.data, a.aggregation_bits
+                    )
+                ),
+                key=lambda a: a.inclusion_delay,
+            )
+
             rewarded_proposer_indices.add(earliest_attestation.proposer_index)
 
     # Ensure all expected proposers have been rewarded
@@ -258,25 +268,21 @@ def run_get_inactivity_penalty_deltas(spec, state):
                     assert penalties[index] == 0
                 else:
                     assert penalties[index] == base_penalty
+            elif is_post_altair(spec):
+                assert penalties[index] > 0
             else:
-                if is_post_altair(spec):
-                    assert penalties[index] > 0
-                else:
-                    assert penalties[index] > base_penalty
+                assert penalties[index] > base_penalty
+        elif (
+            is_post_altair(spec)
+            and index in matching_attesting_indices
+            or not is_post_altair(spec)
+        ):
+            assert penalties[index] == 0
         else:
-            if not is_post_altair(spec):
-                assert penalties[index] == 0
-                continue
-            else:
-                # post altair, this penalty is derived from the inactivity score
-                # regardless if the state is leaking or not...
-                if index in matching_attesting_indices:
-                    assert penalties[index] == 0
-                else:
-                    # copied from spec:
-                    penalty_numerator = state.validators[index].effective_balance * state.inactivity_scores[index]
-                    penalty_denominator = spec.config.INACTIVITY_SCORE_BIAS * get_inactivity_penalty_quotient(spec)
-                    assert penalties[index] == penalty_numerator // penalty_denominator
+            # copied from spec:
+            penalty_numerator = state.validators[index].effective_balance * state.inactivity_scores[index]
+            penalty_denominator = spec.config.INACTIVITY_SCORE_BIAS * get_inactivity_penalty_quotient(spec)
+            assert penalties[index] == penalty_numerator // penalty_denominator
 
 
 def transition_state_to_leak(spec, state, epochs=None):
@@ -461,10 +467,12 @@ def run_test_proposer_not_in_attestations(spec, state):
     cached_prepare_state_with_attestations(spec, state)
 
     # Get an attestation where the proposer is not in the committee
-    non_proposer_attestations = []
-    for a in state.previous_epoch_attestations:
-        if a.proposer_index not in spec.get_unslashed_attesting_indices(state, [a]):
-            non_proposer_attestations.append(a)
+    non_proposer_attestations = [
+        a
+        for a in state.previous_epoch_attestations
+        if a.proposer_index
+        not in spec.get_unslashed_attesting_indices(state, [a])
+    ]
 
     assert any(non_proposer_attestations)
     state.previous_epoch_attestations = non_proposer_attestations
@@ -484,7 +492,11 @@ def run_test_duplicate_attestations_at_later_slots(spec, state):
         (a.data.slot + a.inclusion_delay): a.proposer_index
         for a in state.previous_epoch_attestations
     }
-    max_slot = max([a.data.slot + a.inclusion_delay for a in state.previous_epoch_attestations])
+    max_slot = max(
+        a.data.slot + a.inclusion_delay
+        for a in state.previous_epoch_attestations
+    )
+
     later_attestations = []
     for a in state.previous_epoch_attestations:
         # Only have proposers for previous epoch so do not create later

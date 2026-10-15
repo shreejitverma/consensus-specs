@@ -54,14 +54,16 @@ def get_random_proposer_slashings(spec, state, rng):
         index for index in active_indices
         if not state.validators[index].slashed
     ]
-    slashings = [
+    return [
         get_valid_proposer_slashing(
-            spec, state,
-            slashed_index=indices.pop(rng.randrange(len(indices))), signed_1=True, signed_2=True,
+            spec,
+            state,
+            slashed_index=indices.pop(rng.randrange(len(indices))),
+            signed_1=True,
+            signed_2=True,
         )
         for _ in range(num_slashings)
     ]
-    return slashings
 
 
 def get_random_attester_slashings(spec, state, rng, slashed_indices=[]):
@@ -87,30 +89,38 @@ def get_random_attester_slashings(spec, state, rng, slashed_indices=[]):
         return []
 
     slot_range = list(range(state.slot - spec.SLOTS_PER_HISTORICAL_ROOT + 1, state.slot))
-    slashings = [
+    return [
         get_valid_attester_slashing_by_indices(
-            spec, state,
-            sorted([indices.pop(rng.randrange(len(indices))) for _ in range(rng.randrange(1, sample_upper_bound))]),
+            spec,
+            state,
+            sorted(
+                [
+                    indices.pop(rng.randrange(len(indices)))
+                    for _ in range(rng.randrange(1, sample_upper_bound))
+                ]
+            ),
             slot=slot_range.pop(rng.randrange(len(slot_range))),
-            signed_1=True, signed_2=True,
+            signed_1=True,
+            signed_2=True,
         )
         for _ in range(num_slashings)
     ]
-    return slashings
 
 
 def get_random_attestations(spec, state, rng):
     num_attestations = rng.randrange(1, spec.MAX_ATTESTATIONS)
 
-    attestations = [
+    return [
         get_valid_attestation(
-            spec, state,
-            slot=rng.randrange(state.slot - spec.SLOTS_PER_EPOCH + 1, state.slot),
+            spec,
+            state,
+            slot=rng.randrange(
+                state.slot - spec.SLOTS_PER_EPOCH + 1, state.slot
+            ),
             signed=True,
         )
         for _ in range(num_attestations)
     ]
-    return attestations
 
 
 def get_random_deposits(spec, state, rng, num_deposits=None):
@@ -169,10 +179,12 @@ def _eligible_for_exit(spec, state, index):
 def get_random_voluntary_exits(spec, state, to_be_slashed_indices, rng):
     num_exits = rng.randrange(1, spec.MAX_VOLUNTARY_EXITS)
     active_indices = set(spec.get_active_validator_indices(state, spec.get_current_epoch(state)).copy())
-    indices = set(
-        index for index in active_indices
+    indices = {
+        index
+        for index in active_indices
         if _eligible_for_exit(spec, state, index)
-    )
+    }
+
     eligible_indices = indices - to_be_slashed_indices
     indices_count = min(num_exits, len(eligible_indices))
     exit_indices = [eligible_indices.pop() for _ in range(indices_count)]
@@ -214,10 +226,11 @@ def build_random_block_from_state_for_next_slot(spec, state, rng=Random(2188), d
         block.body.deposits = deposits
 
     # cannot include to be slashed indices as exits
-    slashed_indices = set([
+    slashed_indices = {
         slashing.signed_header_1.message.proposer_index
         for slashing in block.body.proposer_slashings
-    ])
+    }
+
     for attester_slashing in block.body.attester_slashings:
         slashed_indices = slashed_indices.union(attester_slashing.attestation_1.attesting_indices)
         slashed_indices = slashed_indices.union(attester_slashing.attestation_2.attesting_indices)

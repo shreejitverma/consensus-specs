@@ -18,14 +18,7 @@ def add_mock_attestations(spec, state, epoch, source, target, sufficient_support
     previous_epoch = spec.get_previous_epoch(state)
     current_epoch = spec.get_current_epoch(state)
 
-    if not is_post_altair(spec):
-        if current_epoch == epoch:
-            attestations = state.current_epoch_attestations
-        elif previous_epoch == epoch:
-            attestations = state.previous_epoch_attestations
-        else:
-            raise Exception(f"cannot include attestations in epoch ${epoch} from epoch ${current_epoch}")
-    else:
+    if is_post_altair(spec):
         if current_epoch == epoch:
             epoch_participation = state.current_epoch_participation
         elif previous_epoch == epoch:
@@ -33,6 +26,12 @@ def add_mock_attestations(spec, state, epoch, source, target, sufficient_support
         else:
             raise Exception(f"cannot include attestations in epoch ${epoch} from epoch ${current_epoch}")
 
+    elif current_epoch == epoch:
+        attestations = state.current_epoch_attestations
+    elif previous_epoch == epoch:
+        attestations = state.previous_epoch_attestations
+    else:
+        raise Exception(f"cannot include attestations in epoch ${epoch} from epoch ${current_epoch}")
     total_balance = spec.get_total_active_balance(state)
     remaining_balance = int(total_balance * 2 // 3)  # can become negative
 
@@ -51,12 +50,11 @@ def add_mock_attestations(spec, state, epoch, source, target, sufficient_support
 
             aggregation_bits = [0] * len(committee)
             for v in range(len(committee) * 2 // 3 + 1):
-                if remaining_balance > 0:
-                    remaining_balance -= int(state.validators[v].effective_balance)
-                    aggregation_bits[v] = 1
-                else:
+                if remaining_balance <= 0:
                     break
 
+                remaining_balance -= int(state.validators[v].effective_balance)
+                aggregation_bits[v] = 1
             # remove 1/5th of attesters so that support is insufficient
             if not sufficient_support:
                 for i in range(max(len(committee) // 5, 1)):
@@ -353,25 +351,17 @@ def test_balance_threshold_with_exited_validators(spec, state):
         current_attestations = spec.get_matching_target_attestations(state, epoch)
         total_active_balance = spec.get_total_active_balance(state)
         current_target_balance = spec.get_attesting_balance(state, current_attestations)
-        # Check we will not justify the current checkpoint
-        does_justify = current_target_balance * 3 >= total_active_balance * 2
-        assert not does_justify
-        # Ensure we would have justified the current checkpoint w/ the exited validators
-        current_exited_balance = spec.get_total_balance(state, exited_validators)
-        does_justify = (current_target_balance + current_exited_balance) * 3 >= total_active_balance * 2
-        assert does_justify
     else:
         current_indices = spec.get_unslashed_participating_indices(state, spec.TIMELY_TARGET_FLAG_INDEX, epoch)
         total_active_balance = spec.get_total_active_balance(state)
         current_target_balance = spec.get_total_balance(state, current_indices)
-        # Check we will not justify the current checkpoint
-        does_justify = current_target_balance * 3 >= total_active_balance * 2
-        assert not does_justify
-        # Ensure we would have justified the current checkpoint w/ the exited validators
-        current_exited_balance = spec.get_total_balance(state, exited_validators)
-        does_justify = (current_target_balance + current_exited_balance) * 3 >= total_active_balance * 2
-        assert does_justify
-
+    # Check we will not justify the current checkpoint
+    does_justify = current_target_balance * 3 >= total_active_balance * 2
+    assert not does_justify
+    # Ensure we would have justified the current checkpoint w/ the exited validators
+    current_exited_balance = spec.get_total_balance(state, exited_validators)
+    does_justify = (current_target_balance + current_exited_balance) * 3 >= total_active_balance * 2
+    assert does_justify
     yield from run_process_just_and_fin(spec, state)
 
     assert state.current_justified_checkpoint.epoch != epoch

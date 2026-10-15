@@ -41,12 +41,8 @@ def test_finality_no_updates_at_genesis(spec, state):
         blocks += new_blocks
 
         # justification/finalization skipped at GENESIS_EPOCH
-        if epoch == 0:
+        if epoch in [0, 1]:
             check_finality(spec, state, prev_state, False, False, False)
-        # justification/finalization skipped at GENESIS_EPOCH + 1
-        elif epoch == 1:
-            check_finality(spec, state, prev_state, False, False, False)
-
     yield 'blocks', blocks
     yield 'post', state
 

@@ -163,7 +163,7 @@ def test_process_light_client_update_finality_updated(spec, state):
     # Change finality
     blocks = []
     next_slots(spec, state, spec.SLOTS_PER_EPOCH * 2)
-    for epoch in range(3):
+    for _ in range(3):
         prev_state, new_blocks, state = next_epoch_with_attestations(spec, state, True, True)
         blocks += new_blocks
     # Ensure that finality checkpoint has changed

@@ -33,13 +33,16 @@ def tick_and_add_block(spec, store, signed_block, test_steps, valid=True,
     if store.time < block_time:
         on_tick_and_append_step(spec, store, block_time, test_steps)
 
-    post_state = yield from add_block(
-        spec, store, signed_block, test_steps,
-        valid=valid,
-        block_not_found=block_not_found,
+    return (
+        yield from add_block(
+            spec,
+            store,
+            signed_block,
+            test_steps,
+            valid=valid,
+            block_not_found=block_not_found,
+        )
     )
-
-    return post_state
 
 
 def add_attestation(spec, store, attestation, test_steps, is_from_block=False):
